@@ -99,10 +99,11 @@ PHOTO_FOLDER = ASSETS / "photos"
 # TODO:
 # Replace with custom font later.
 
-font_name = pygame.font.SysFont("arial", 28)
-
-font_text = pygame.font.SysFont("arial", 32)
-
+font_name = pygame.font.SysFont("terminus", 28)
+font_text = pygame.font.SysFont("terminus", 32)
+font_title = pygame.font.SysFont("arial", 56, bold=True)
+font_subtitle = pygame.font.SysFont("arial", 36)
+font_hint = pygame.font.SysFont("arial", 24)
 
 # =========================================================
 # PLACEHOLDER BACKGROUND
@@ -122,30 +123,79 @@ background.fill((60,70,90))
 # Every dialogue entry should follow this format:
 #
 # {
+#     "type":"..."
 #     "speaker": "...",
 #     "text": "...",
+#     "background":"..."
 # }
 
 scene_intro = [
 
     {
-        "speaker":"Narrator",
-        "text":"TODO: Opening narration."
+        "type": "title",
+        "title": "Chapter 1",
+        "subtitle": "The Newcomer"
     },
 
     {
+        "type":"dialogue",
+        "speaker":"Narrator",
+        "text":"It is the summer of July, 2025."
+    },
+
+    {
+        "type":"dialogue",
+        "speaker":"Narrator",
+        "text":"Ice, an incoming college student, went on to his hometown after years of high school in the city."
+
+    },
+
+    {
+        "type":"dialogue",
+        "speaker":"Narrator",
+        "text":"Lorem ipsum (lmao)"
+    },
+
+
+    {
+        "type":"dialogue",
         "speaker":"Isaac",
         "text":"TODO: First line."
     },
 
+    {
+        "type":"dialogue",
+        "speaker":"Isaac",
+        "text":"TODO: First line"
+    },
+
 ]
 
+scene_practical = [
+
+    {
+        "type":"title",
+        "title":"Chapter 2",
+        "subtitle":"First Interaction"
+    },
+    {
+        "type":"dialogue",
+        "speaker":"Cynthia",
+        "text":"hello!"
+    }
+]
+
+SCENES = [
+    scene_intro,
+    scene_practical
+]
 
 # =========================================================
 # GAME STATE
 # =========================================================
 
-current_scene = scene_intro
+current_scene_index = 0
+current_scene = SCENES[current_scene_index]
 
 dialogue_index = 0
 
@@ -155,14 +205,6 @@ running = True
 # =========================================================
 # HELPER FUNCTIONS
 # =========================================================
-
-def draw_background():
-    """
-    Draw current background.
-    """
-
-    screen.blit(background, (0,0))
-
 
 def draw_dialogue_box():
     """
@@ -176,6 +218,32 @@ def draw_dialogue_box():
         border_radius=12
     )
 
+def draw_title_card(current):
+    """
+    Draw a simple chapter title card.
+    """
+
+    # Fill the screen with black
+    screen.fill(BLACK)
+
+    # Get title information
+    title = current["title"]
+    subtitle = current["subtitle"]
+
+    # Render text
+    title_surface = font_title.render(title, True, WHITE)
+    subtitle_surface = font_subtitle.render(subtitle, True, WHITE)
+    hint_surface = font_hint.render("Press SPACE to continue", True, (180, 180, 180))
+
+    # Center the text
+    title_rect = title_surface.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 40))
+    subtitle_rect = subtitle_surface.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 20))
+    hint_rect = hint_surface.get_rect(center=(WIDTH // 2, HEIGHT - 50))
+
+    # Draw everything
+    screen.blit(title_surface, title_rect)
+    screen.blit(subtitle_surface, subtitle_rect)
+    screen.blit(hint_surface, hint_rect)
 
 def draw_dialogue():
     """
@@ -210,6 +278,8 @@ def next_dialogue():
     """
 
     global dialogue_index
+    global current_scene
+    global current_scene_index
 
     if dialogue_index < len(current_scene)-1:
 
@@ -217,7 +287,9 @@ def next_dialogue():
 
     else:
 
-        print("TODO: Next scene")
+        current_scene_index += 1
+        current_scene = SCENES[current_scene_index]
+        dialogue_index = 0
 
 
 # =========================================================
@@ -247,12 +319,16 @@ def handle_events():
 
 def draw():
 
-    draw_background()
+    screen.blit(background, (0,0) )
 
-    draw_dialogue_box()
+    current = current_scene[dialogue_index]
 
-    draw_dialogue()
+    if current["type"] == "title":
+        draw_title_card(current)
 
+    elif current["type"] == "dialogue":
+        draw_dialogue_box()
+        draw_dialogue()
     pygame.display.flip()
 
 
