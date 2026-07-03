@@ -8,12 +8,12 @@
 
 # Phase 1 — Project Setup
 
-* [ ] Create GitHub repository
-* [ ] Create project folder structure
-* [ ] Create `main.py`
-* [ ] Create `assets/`
-* [ ] Install Pygame
-* [ ] Verify the game window opens
+* [x] Create GitHub repository
+* [x] Create project folder structure
+* [x] Create `main.py`
+* [x] Create `assets/`
+* [x] Install Pygame
+* [x] Verify the game window opens
 
 ---
 
@@ -21,16 +21,16 @@
 
 ## Window
 
-* [ ] Display game window
-* [ ] Set window title
+* [x] Display game window
+* [x] Set window title
 * [ ] Set game icon (optional)
 
 ## Dialogue System
 
-* [ ] Draw dialogue box
-* [ ] Display speaker name
-* [ ] Display dialogue text
-* [ ] Advance dialogue with Space or Enter
+* [x] Draw dialogue box
+* [x] Display speaker name
+* [x] Display dialogue text
+* [x] Advance dialogue with Space or Enter
 
 ## Backgrounds
 
@@ -48,9 +48,9 @@
 
 ## Scene 0 — Opening
 
-* [ ] Opening narration
-* [ ] Title screen
-* [ ] Transition into Scene 1
+* [x] Opening narration
+* [x] Title screen
+* [x] Transition into Scene 1
 
 ## Scene 1 — The Newcomer
 
