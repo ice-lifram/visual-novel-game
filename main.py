@@ -5,19 +5,16 @@ Summer Circuits
 A short visual novel created with Python + Pygame.
 
 Version:
-    v0.1 Skeleton
+    v0.2
 
 Author:
     Ice Lifram
 
-Description:
-    This file contains the entire game for Version 1.0.
-
 Development Philosophy:
     - Single Python file
     - Functions over classes
-    - Simple and readable
-    - Story first, visuals second
+    - Story first
+    - Easy to modify
 ===========================================================
 """
 
@@ -29,8 +26,7 @@ import pygame
 import sys
 from pathlib import Path
 
-# TODO:
-# Import anything else ONLY when needed.
+import dialogue
 
 
 # =========================================================
@@ -39,8 +35,8 @@ from pathlib import Path
 
 pygame.init()
 
-# TODO:
-# Initialize the mixer later when music is added.
+# Uncomment once music is added
+# pygame.mixer.init()
 
 
 # =========================================================
@@ -62,8 +58,6 @@ TITLE = "Summer Circuits"
 WHITE = (255,255,255)
 BLACK = (0,0,0)
 
-GRAY = (40,40,40)
-
 DIALOGUE_BOX = (20,20,20)
 
 
@@ -83,118 +77,87 @@ clock = pygame.time.Clock()
 
 ASSETS = Path("assets")
 
-BACKGROUND_FOLDER = ASSETS / "backgrounds"
+PATHS = {
 
-PORTRAIT_FOLDER = ASSETS / "portraits"
+    "backgrounds": ASSETS / "backgrounds",
 
-MUSIC_FOLDER = ASSETS / "music"
+    "portraits": ASSETS / "portraits",
 
-PHOTO_FOLDER = ASSETS / "photos"
+    "music": ASSETS / "music",
+
+    "ui": ASSETS / "ui"
+
+}
+
+
+# =========================================================
+# ASSET CACHE
+# =========================================================
+
+background_cache = {}
+
+portrait_cache = {}
 
 
 # =========================================================
 # FONTS
 # =========================================================
 
-# TODO:
-# Replace with custom font later.
-
 font_name = pygame.font.SysFont("terminus", 28)
+
 font_text = pygame.font.SysFont("terminus", 32)
+
 font_title = pygame.font.SysFont("arial", 56, bold=True)
+
 font_subtitle = pygame.font.SysFont("arial", 36)
+
 font_hint = pygame.font.SysFont("arial", 24)
+
 
 # =========================================================
 # PLACEHOLDER BACKGROUND
 # =========================================================
 
-# TODO:
-# Load images later.
-
-background = pygame.Surface((WIDTH, HEIGHT))
-background.fill((60,70,90))
+placeholder_bg = pygame.Surface((WIDTH, HEIGHT))
+placeholder_bg.fill((60,70,90))
 
 
 # =========================================================
-# DIALOGUE DATA
+# SCENES
 # =========================================================
-
-# Every dialogue entry should follow this format:
-#
-# {
-#     "type":"..."
-#     "speaker": "...",
-#     "text": "...",
-#     "background":"..."
-# }
-
-scene_intro = [
-
-    {
-        "type": "title",
-        "title": "Chapter 1",
-        "subtitle": "The Newcomer"
-    },
-
-    {
-        "type":"dialogue",
-        "speaker":"Narrator",
-        "text":"It is the summer of July, 2025."
-    },
-
-    {
-        "type":"dialogue",
-        "speaker":"Narrator",
-        "text":"Ice, an incoming college student, went on to his hometown after years of high school in the city."
-
-    },
-
-    {
-        "type":"dialogue",
-        "speaker":"Narrator",
-        "text":"Lorem ipsum (lmao)"
-    },
-
-
-    {
-        "type":"dialogue",
-        "speaker":"Isaac",
-        "text":"TODO: First line."
-    },
-
-    {
-        "type":"dialogue",
-        "speaker":"Isaac",
-        "text":"TODO: First line"
-    },
-
-]
-
-scene_practical = [
-
-    {
-        "type":"title",
-        "title":"Chapter 2",
-        "subtitle":"First Interaction"
-    },
-    {
-        "type":"dialogue",
-        "speaker":"Cynthia",
-        "text":"hello!"
-    }
-]
 
 SCENES = [
-    scene_intro,
-    scene_practical
+
+    dialogue.chapter0,
+
+    dialogue.chapter1
+
 ]
+
 
 # =========================================================
 # GAME STATE
 # =========================================================
 
+state = {
+
+    "background": placeholder_bg,
+
+    "left_portrait": None,
+
+    "right_portrait": None,
+
+    "music": None
+
+}
+
+
+# =========================================================
+# STORY STATE
+# =========================================================
+
 current_scene_index = 0
+
 current_scene = SCENES[current_scene_index]
 
 dialogue_index = 0
@@ -203,152 +166,97 @@ running = True
 
 
 # =========================================================
-# HELPER FUNCTIONS
+# PORTRAIT POSITIONS
 # =========================================================
 
-def draw_dialogue_box():
-    """
-    Draw bottom dialogue box.
-    """
+LEFT_POS = (40,130)
 
-    pygame.draw.rect(
-        screen,
-        DIALOGUE_BOX,
-        (20,500,1240,190),
-        border_radius=12
-    )
+RIGHT_POS = (900,130)
 
-def draw_title_card(current):
+
+# =========================================================
+# ASSET HELPERS
+# =========================================================
+
+def load_background(name):
     """
-    Draw a simple chapter title card.
+    Load a background only once.
     """
 
-    # Fill the screen with black
-    screen.fill(BLACK)
+    if name in background_cache:
+        return background_cache[name]
 
-    # Get title information
-    title = current["title"]
-    subtitle = current["subtitle"]
+    path = PATHS["backgrounds"] / f"{name}.png"
 
-    # Render text
-    title_surface = font_title.render(title, True, WHITE)
-    subtitle_surface = font_subtitle.render(subtitle, True, WHITE)
-    hint_surface = font_hint.render("Press SPACE to continue", True, (180, 180, 180))
+    try:
 
-    # Center the text
-    title_rect = title_surface.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 40))
-    subtitle_rect = subtitle_surface.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 20))
-    hint_rect = hint_surface.get_rect(center=(WIDTH // 2, HEIGHT - 50))
+        image = pygame.image.load(path).convert()
 
-    # Draw everything
-    screen.blit(title_surface, title_rect)
-    screen.blit(subtitle_surface, subtitle_rect)
-    screen.blit(hint_surface, hint_rect)
+    except:
 
-def draw_dialogue():
+        image = placeholder_bg
+
+    background_cache[name] = image
+
+    return image
+
+
+def load_portrait(name):
     """
-    Draw current dialogue.
+    Load a portrait only once.
     """
 
-    line = current_scene[dialogue_index]
+    if name is None:
+        return None
 
-    speaker = line["speaker"]
+    if name in portrait_cache:
+        return portrait_cache[name]
 
-    text = line["text"]
+    path = PATHS["portraits"] / f"{name}.png"
 
-    speaker_surface = font_name.render(
-        speaker,
-        True,
-        WHITE
-    )
+    try:
 
-    text_surface = font_text.render(
-        text,
-        True,
-        WHITE
-    )
+        image = pygame.image.load(path).convert_alpha()
 
-    screen.blit(speaker_surface, (50,520))
-    screen.blit(text_surface, (50,570))
+    except:
+
+        image = None
+
+    portrait_cache[name] = image
+
+    return image
 
 
-def next_dialogue():
+def play_music(name):
     """
-    Advance dialogue.
+    Play background music.
+
+    Disabled until music is added.
     """
 
-    global dialogue_index
-    global current_scene
-    global current_scene_index
+    if state["music"] == name:
+        return
 
-    if dialogue_index < len(current_scene)-1:
+    state["music"] = name
 
-        dialogue_index += 1
-
-    else:
-
-        current_scene_index += 1
-        current_scene = SCENES[current_scene_index]
-        dialogue_index = 0
+    # pygame.mixer.music.load(
+    #     PATHS["music"] / f"{name}.ogg"
+    # )
+    #
+    # pygame.mixer.music.play(-1)
 
 
 # =========================================================
-# EVENT HANDLER
+# SCENE COMMANDS
 # =========================================================
 
-def handle_events():
+def set_background(name):
 
-    global running
-
-    for event in pygame.event.get():
-
-        if event.type == pygame.QUIT:
-
-            running = False
-
-        elif event.type == pygame.KEYDOWN:
-
-            if event.key == pygame.K_SPACE:
-
-                next_dialogue()
+    state["background"] = load_background(name)
 
 
-# =========================================================
-# DRAW
-# =========================================================
+def set_portraits(left=None, right=None):
 
-def draw():
+    state["left_portrait"] = load_portrait(left)
 
-    screen.blit(background, (0,0) )
-
-    current = current_scene[dialogue_index]
-
-    if current["type"] == "title":
-        draw_title_card(current)
-
-    elif current["type"] == "dialogue":
-        draw_dialogue_box()
-        draw_dialogue()
-    pygame.display.flip()
-
-
-# =========================================================
-# MAIN LOOP
-# =========================================================
-
-while running:
-
-    handle_events()
-
-    draw()
-
-    clock.tick(FPS)
-
-
-# =========================================================
-# CLEANUP
-# =========================================================
-
-pygame.quit()
-
-sys.exit()
+    state["right_portrait"] = load_portrait(right)
